@@ -1,6 +1,7 @@
-                                        */
 
+# change role to sysadmin
 use role sysadmin;
+
 
 create database samples;
 create schema samples.finance;
@@ -13,7 +14,6 @@ create or replace table samples.finance.stocks_data (
     ask_price float,
     bid_cnt int,
     ask_cnt int)
-    ---,access_id string /* column for fine-graned  access */ )
     cluster by (date);
           
 
