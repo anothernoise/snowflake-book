@@ -1,12 +1,12 @@
 
-# change role to sysadmin
-use role sysadmin;
 
+#Listing 10-1
+use role sysadmin;
 
 create database samples;
 create schema samples.finance;
 create or replace table samples.finance.stocks_data (
-    rowid int,
+    id int,
     symbol string,
     date date,
     time time(9),
@@ -27,6 +27,8 @@ insert into samples.finance.stocks_data
 
 select * from samples.finance.stocks_data;
 
+
+#Listing 10-2
 use ROLE accountadmin;
 
 CREATE or replace SHARE stocks_share;
@@ -38,12 +40,11 @@ GRANT SELECT ON TABLE samples.finance.stocks_data TO SHARE stocks_share;
 
 SHOW GRANTS TO SHARE stocks_share;
 
-# create a new account called 
+# add your account to the shared object
+ALTER SHARE stocks_share ADD ACCOUNTS=<new_account>;
 
-ALTER SHARE stocks_share ADD ACCOUNTS=test_gu41401;
 
-
----example 2
+#Listing 10-3
 use role sysadmin;  
 
 alter table  samples.finance.stocks_data  
@@ -52,11 +53,11 @@ alter table  samples.finance.stocks_data
 
 update finance.stocks_data
     set access_id = 'GRP_1'
-where rowid in (1,2,3,4);
+where id in (1,2,3,4);
 
 update finance.stocks_data
     set access_id = 'GRP_2'
-where rowid in (5,6);
+where id in (5,6);
 commit;
 
 select * from finance.stocks_data;
@@ -65,7 +66,9 @@ select access_id, count(access_id)
 from samples.finance.stocks_data
 group by access_id;
 
---
+
+#Listing 10-4
+use role sysadmin;
 create or replace table samples.finance.access_map (
   access_id string,
   account string
@@ -80,6 +83,8 @@ commit;
 
 select * from samples.finance.access_map;
 
+
+#Listing 10-5
 create or replace schema samples.pubic;
 
 create or replace secure view samples.public.stocks as
@@ -92,7 +97,8 @@ grant select on samples.public.stocks  to public;
 
 select * from samples.public.stocks;
 
----
+
+#Listing 10-6
 select count(*) from samples.finance.stocks_data;
 select * from samples.finance.stocks_data;
 
@@ -100,13 +106,13 @@ select count(*) from samples.public.stocks;
 select * from samples.public.stocks;
 
 select * from samples.public.stocks where symbol = 'TDC';
-----
 
+
+#Listing 10-7
 alter session set simulated_data_sharing_consumer=<account_name>;
 
 select * from samples.public.stocks;
 
----
 use role accountadmin;
 
 create or replace share share_sv;
@@ -118,3 +124,65 @@ grant select on samples.public.stocks to share share_sv;
 show grants to share share_sv;
 
 alter share share_sv set accounts = <consumer_accounts>;
+
+
+#Listing 10-8
+
+use role accountadmin;
+
+show shares;
+desc share <provider_account>.share_sv;
+create database shared_db from share <provider_account>.share_sv; 
+grant imported privileges on database shared_db to sysadmin; 
+use role sysadmin; 
+show views; 
+use warehouse <warehouse_name>; 
+select * from stocks;
+
+
+
+#Listing 10-9 -- Time Travel feature
+show parameters like ‘%DATA%’ in account;
+alter account set DATA_RETENTION_TIME_IN_DAYS = 2; 
+
+show parameters like ‘%DATA%’ in database samples;
+alter database database samples 
+  set DATA_RETENTION_TIME_IN_DAYS = 1;
+
+
+#Listing 10-10
+create or replace table samples.finance.stocks (
+    id int,
+    symbol string,
+    name string
+);
+
+
+insert into samples.finance.stocks
+ values(1,'TDC', 'Teradata'), (2,'ORCL', 'Oracle'), (3,'TSLA', 'Tesla')
+;
+
+select * from samples.finance.stocks;
+
+
+#Listing 10-11
+insert into samples.finance.stocks
+values(5,'MSFT', 'Microsoft');
+
+delete from samples.finance.stocks
+  where id = 3;
+
+select * from samples.finance.stocks;
+select * from samples.finance.stocks at (offset = -1*60);
+
+show parameters like '%DATA%';
+
+#Listing 10-12
+drop table samples.finance.stocks;
+select * from samples.finance.stocks;
+undrop table samples.finance.stocks;
+
+create table samples.finance.stocks_10m clone samples.finance.stocks at (offset => -10*60);
+
+  
+
