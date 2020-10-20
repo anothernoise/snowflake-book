@@ -1,0 +1,23 @@
+{
+  "type" : "record",
+  "name" : "simple_stock_schema",
+  "namespace" : "com.apress.snowflake_jumpstart.avro",
+  "fields" : [ {
+    "name" : "symbol",
+    "type" : "string",
+    "doc"  : "Symbol of the stock"
+  }, {
+    "name" : "name",
+    "type" : "string",
+    "doc"  : "Name of the stock"
+  }, {
+    "name" : "price",
+    "type" : "float",
+    "doc"  : "Price of the stock"
+  }, {
+    "name" : "last_trade_time",
+    "type" : "long",
+    "doc"  : "Last trade time. Time Unix epoch time in seconds"
+  } ],
+  "doc:" : "A basic schema for storing stock messages"
+}
